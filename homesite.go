@@ -1,7 +1,6 @@
 package main
 
 import (
-    "fmt"
     "net/http"
     "log"
     "html/template"
@@ -10,61 +9,63 @@ import (
     "github.com/julienschmidt/httprouter"
 )
 
-type Page struct {
+type Block struct {
     Title string
     Body []byte
 }
 
-func (p *Page) save() error {
-    filename := p.Title + ".txt"
-    return os.WriteFile(filename, p.Body, 0600)
+func (b *Block) save() error {
+    return os.WriteFile(b.path(), b.Body, 0600)
 }
 
-func loadPage(title string) (*Page, error) {
-    filename := title + ".txt"
+func (b *Block) path() string {
+    return "Blocks/" + b.Title + ".txt"
+}
+
+func loadBlock(title string) (*Block, error) {
+    filename := "Blocks/" + title + ".txt"
     body, err := os.ReadFile(filename)
     if err != nil {
         return nil, err
     }
-    return &Page{Title: title, Body: body}, nil
+    return &Block{Title: title, Body: body}, nil
 }
 
-func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-    t, _ := template.ParseFiles("Templates/index.html")
-    t.Execute(w, nil)
-}
-
-func Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-    fmt.Fprintf(w, "hello, %s!\n", ps.ByName("name"))
-}
-
-func Edit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-    p, err := loadPage("log")
-    if err != nil {
-        log.Println("log.txt not found")
-        p = &Page{Title: "log"}
-    }
-    t, _ := template.ParseFiles("Templates/edit.html")
+func renderTemplate(w http.ResponseWriter, tmpl string, p *Block) {
+    t, _ := template.ParseFiles("Templates/" + tmpl + ".html")
     t.Execute(w, p)
 }
 
+func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+    renderTemplate(w, "index", nil)
+}
+
+func Edit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    title := ps.ByName("title")
+    b, err := loadBlock(title)
+    if err != nil {
+        log.Println(title + ".txt not found")
+        b = &Block{Title: "log"}
+    }
+    renderTemplate(w, "edit", b)
+}
+
 func Save(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-    log.Println(r.PostFormValue("body"))
-    p, err := loadPage("log")
+    title := ps.ByName("title")
+    b, err := loadBlock(title)
     if err != nil {
         return
     }
-    p.Body = []byte(r.PostFormValue("body"))
-    p.save()
+    b.Body = []byte(r.PostFormValue("body"))
+    b.save()
     http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func main() {
     router := httprouter.New()
     router.GET("/", Index)
-    router.GET("/hello/:name", Hello)
-    router.GET("/edit/", Edit)
-    router.POST("/save/", Save)
+    router.GET("/edit/:title", Edit)
+    router.POST("/save/:title", Save)
 
     log.Fatal(http.ListenAndServe(":8080", router))
 }
