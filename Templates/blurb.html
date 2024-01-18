@@ -1,4 +1,9 @@
-<div>
+<div id="blurb-box">
+    <button class="btn"
+        hx-get="/edit/{{.Title}}"
+        hx-trigger="click"
+        hx-target="#blurb-box"
+    >edit</button>
     <b1>{{.Title}}</b1>
     <p>{{printf "%s" .Body}}</p>
 </div>

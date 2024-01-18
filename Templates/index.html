@@ -1,6 +1,13 @@
-<div>
+<div id="page">
     <b1>Index</b1>
     <p>Welcome!</p>
+    <button class="btn"
+        hx-get="/page/about"
+        hx-trigger="click"
+        hx-target="#page"
+    >
+    about
+    </button>
     <button class="btn"
         hx-get="/edit/log"
         hx-trigger="click"
