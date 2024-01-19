@@ -1,5 +1,16 @@
 <form hx-post="/blurb/{{.Title}}/save/" hx-target="#blurb-box" hx-swap="outerHTML">
-    <h2>Editing</h2>
-    <div><textarea name="body" rows="20" cols="80">{{printf "%s" .Body}}</textarea></div>
-    <div><input class="" type="submit" value="Save"></div>
+    <h2 class="text-slate-900 dark:text-slate-50">Editing</h2>
+    <div class="">
+        <textarea 
+            class="bg-gray-50 rounded-md border border-black px-2 w-full"
+        >{{printf "%s" .Body}}</textarea>
+        <div class="flex flex-row-reverse">
+            <div class="flex-none m-1">
+                <button class="text-slate-50 bg-slate-500 rounded-md px-2" hx-get="/blurb/{{.Title}}" hx-target="#blurb-box" hx-swap="outerHTML">Cancel</button>
+            </div>
+            <div class="flex-none m-1">
+                <input class="text-slate-50 bg-indigo-500 rounded-md px-2" type="submit" value="Save">
+            </div>
+        </div>
+    </div>
 </form>

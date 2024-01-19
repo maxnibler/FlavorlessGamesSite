@@ -5,8 +5,11 @@
         <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
         <link rel="stylesheet" href="./static/output.css"> 
     </header>
-    <div hx-get="/header" hx-trigger="load"></div>
-    <head>{{template "head" .}}</head>
-    <body>{{template "body" .}}</body>
+    <div class="bg-gray-100 dark:bg-slate-700 h-screen">
+        <div hx-get="/header" hx-trigger="load" hx-swap="outerHTML"></div>
+        <head>{{template "head" .}}</head>
+        <body>{{template "body" .}}</body>
+        <footer>{{template "foot" .}}</footer>
+    </div>
 </html>
 {{end}}
