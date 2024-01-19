@@ -21,3 +21,4 @@
 go.work
 tailwindcss
 Data/Users/*
+Data/.secret

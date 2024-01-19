@@ -1,0 +1,28 @@
+{{define "head"}}
+
+{{end}}
+
+{{define "body"}}
+<div class="container mx-auto h-full flex items-center">
+    <div class="flex h-1/2 grow">
+        <div class="flex basis-1/2 justify-center items-center dark:bg-slate-400 rounded-md mx-2 h-full">
+            <form class="shrink" hx-post="/users/login/" hx-swap="none">
+                <p>Email</p>
+                <input type="text" name="email">
+                <p>Password</p>
+                <input type="text" name="password">
+                <input class="text-slate-50 bg-indigo-500 rounded-md px-2" type="submit" value="Save">
+            </form>
+        </div>
+        <div class="flex basis-1/2 justify-center dark:bg-slate-400 rounded-md mx-2 h-full">
+            <div class="shrink">
+                Signup
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "foot"}}
+
+{{end}}

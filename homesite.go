@@ -5,13 +5,20 @@ import (
     "log"
     "html/template"
     "os"
+    // "fmt"
 
+    "github.com/gorilla/sessions"
     "github.com/julienschmidt/httprouter"
 )
 
 var tmpl = map[string]*template.Template{}
+var store *sessions.CookieStore
 
-// Blurbs
+type User struct {
+    Name string
+    Email string
+    Admin bool
+}
 
 type Blurb struct {
     Title string
@@ -22,6 +29,32 @@ func (b *Blurb) save() error {
     path := "Data/Blurbs/" + b.Title + ".txt"
     return os.WriteFile(path, b.Body, 0600)
 }
+
+// Users
+
+func sessionUser(w http.ResponseWriter, r *http.Request) (*User, error) {
+    session, err := store.Get(r, "user-session")
+    if err != nil {
+		return nil, err
+    }
+    err = session.Save(r, w)
+	if err != nil {
+		return nil, err
+	}
+    user, yes := session.Values["user"].(*User)
+    if yes {
+        return user, nil
+    }
+    return nil, nil
+}
+
+func LoginPost(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    log.Printf("%s, %s", r.PostFormValue("email"), r.PostFormValue("password"))
+    w.Header().Set("HX-Redirect", "/")
+    w.WriteHeader(http.StatusOK)
+}
+
+// Blurbs
 
 func loadBlurb(title string) (*Blurb, error) {
     filename := "Data/Blurbs/" + title + ".txt"
@@ -102,6 +135,10 @@ func loadPage(name string) *template.Template {
 }
 
 func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+    _, err := sessionUser(w, r)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
     t := loadPage("index")
     t.ExecuteTemplate(w, "base", nil)
 }
@@ -111,12 +148,32 @@ func About(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
     t.ExecuteTemplate(w, "base", nil)
 }
 
+func LoginPage(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+    t := loadPage("login")
+    t.ExecuteTemplate(w, "base", nil)
+}
+
+func loadEnvs() {
+    // Load Session Key
+    sessionKey, err := os.ReadFile("Data/.secret/session_key.txt")
+    if err != nil {
+        log.Printf("Session Key not found, sessions will not work")
+    } else {
+        os.Setenv("SESSION_KEY", string(sessionKey))
+        store = sessions.NewCookieStore(sessionKey)
+    }
+}
+
 func main() {
     router := httprouter.New()
+
+    loadEnvs()
 
     router.GET("/", Index)
     router.GET("/about", About)
     router.GET("/header", Header)
+    router.GET("/users/login", LoginPage)
+    router.POST("/users/login", LoginPost)
     router.GET("/blurb/:key/edit", BlurbEdit)
     router.POST("/blurb/:key/save", BlurbSave)
     router.GET("/blurb/:key", BlurbGet)
