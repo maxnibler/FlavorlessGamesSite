@@ -75,6 +75,7 @@ func loadBlock(name string) *template.Template {
     if tmpl[name] == nil {
         tmpl[name] = template.Must(template.ParseFiles(path))
     }
+    tmpl[name] = template.Must(template.ParseFiles(path))
     return tmpl[name]
 }
 
@@ -96,6 +97,7 @@ func loadPage(name string) *template.Template {
         // log.Printf("Initializing Template: %s", name)
         tmpl[name] = template.Must(template.ParseFiles(pp, bp))
     }
+    tmpl[name] = template.Must(template.ParseFiles(pp, bp))
     return tmpl[name]
 }
 
@@ -118,6 +120,8 @@ func main() {
     router.GET("/blurb/:key/edit", BlurbEdit)
     router.POST("/blurb/:key/save", BlurbSave)
     router.GET("/blurb/:key", BlurbGet)
+
+    router.ServeFiles("/static/*filepath", http.Dir("static"))
 
     log.Fatal(http.ListenAndServe(":8080", router))
 }

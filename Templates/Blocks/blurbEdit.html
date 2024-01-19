@@ -1,5 +1,5 @@
-<form hx-post="/blurb/{{.Title}}/save/" hx-swap="outerHTML">
+<form hx-post="/blurb/{{.Title}}/save/" hx-target="#blurb-box" hx-swap="outerHTML">
     <h2>Editing</h2>
     <div><textarea name="body" rows="20" cols="80">{{printf "%s" .Body}}</textarea></div>
-    <div><input type="submit" value="Save"></div>
+    <div><input class="" type="submit" value="Save"></div>
 </form>

@@ -1,9 +1,15 @@
 <div id="blurb-box">
-    <button class="btn"
-        hx-get="/blurb/{{.Title}}/edit/"
-        hx-trigger="click"
-        hx-target="#blurb-box"
-    >edit</button>
-    <b1>{{.Title}}</b1>
+    <div class="flex">
+        <div class="grow">
+            <b1 class="font-bold">{{.Title}}</b1>
+        </div>
+        <div class="basis-auto">
+            <button class="btn"
+                hx-get="/blurb/{{.Title}}/edit/"
+                hx-trigger="click"
+                hx-target="#blurb-box"
+            >edit</button>
+        </div>
+    </div>
     <p>{{printf "%s" .Body}}</p>
 </div>
