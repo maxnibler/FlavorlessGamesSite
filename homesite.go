@@ -9,21 +9,22 @@ import (
     "github.com/julienschmidt/httprouter"
 )
 
+var tmpl = map[string]*template.Template{}
+
+// Blurbs
+
 type Blurb struct {
     Title string
     Body []byte
 }
 
 func (b *Blurb) save() error {
-    return os.WriteFile(b.path(), b.Body, 0600)
-}
-
-func (b *Blurb) path() string {
-    return "Blurbs/" + b.Title + ".txt"
+    path := "Data/Blurbs/" + b.Title + ".txt"
+    return os.WriteFile(path, b.Body, 0600)
 }
 
 func loadBlurb(title string) (*Blurb, error) {
-    filename := "Blurbs/" + title + ".txt"
+    filename := "Data/Blurbs/" + title + ".txt"
     body, err := os.ReadFile(filename)
     if err != nil {
         return nil, err
@@ -31,69 +32,92 @@ func loadBlurb(title string) (*Blurb, error) {
     return &Blurb{Title: title, Body: body}, nil
 }
 
-func renderTemplate(w http.ResponseWriter, tmpl string, p *Blurb) {
-    t, _ := template.ParseFiles("Templates/" + tmpl + ".html")
-    t.Execute(w, p)
-}
-
-func renderPage(w http.ResponseWriter, tmpl string) {
-    t, _ := template.ParseFiles("Pages/" + tmpl + ".html")
-    t.Execute(w, nil)
-}
-
-func templatePath(name string) string {
-    return "Templates/" + name + ".html"
-}
-
-func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-    renderTemplate(w, "index", nil)
-}
-
-func Edit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-    title := ps.ByName("title")
-    b, err := loadBlurb(title)
-    if err != nil {
-        b = &Blurb{Title: "log"}
-    }
-    renderTemplate(w, "edit", b)
-}
-
-func Save(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-    title := ps.ByName("title")
+func BlurbSave(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    title := ps.ByName("key")
     b, err := loadBlurb(title)
     if err != nil {
         return
     }
     b.Body = []byte(r.PostFormValue("body"))
     b.save()
-    tmpl, _ := template.ParseFiles(templatePath("blurb"))
-    tmpl.Execute(w, b)
+    t := loadBlock("blurb")
+    t.Execute(w, b)
 }
 
-func GetBlurb(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-    title := ps.ByName("title")
+func BlurbGet(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    key := ps.ByName("key")
+    b, err := loadBlurb(key)
+    if err != nil {
+        b = &Blurb{Title: key}
+    }
+    t := loadBlock("blurb")
+    t.Execute(w, b)
+}
+
+func BlurbEdit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    title := ps.ByName("key")
     b, err := loadBlurb(title)
     if err != nil {
-        b = &Blurb{Title: "Blurb not found"}
+        b = &Blurb{Title: title}
     }
-    tmpl, _ := template.ParseFiles(templatePath("blurb"))
-    tmpl.Execute(w, b)
+    t := loadBlock("blurbEdit")
+    t.Execute(w, b)
 }
 
-func Page(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-    title := ps.ByName("page_name")
-    renderPage(w, title)
+// Blocks
+
+func blockPath(name string) string {
+    return "Templates/Blocks/" + name + ".html"
 }
 
-func Header()
+func loadBlock(name string) *template.Template {
+    path := blockPath(name)
+    if tmpl[name] == nil {
+        tmpl[name] = template.Must(template.ParseFiles(path))
+    }
+    return tmpl[name]
+}
+
+func Header(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    t := loadBlock("header")
+    t.Execute(w, nil)
+}
+
+// Pages
+
+func pagePath(name string) string {
+    return "Templates/Pages/" + name + ".html" 
+}
+
+func loadPage(name string) *template.Template {
+    pp := pagePath(name)
+    bp := pagePath("base")
+    if tmpl[name] == nil {
+        // log.Printf("Initializing Template: %s", name)
+        tmpl[name] = template.Must(template.ParseFiles(pp, bp))
+    }
+    return tmpl[name]
+}
+
+func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+    t := loadPage("index")
+    t.ExecuteTemplate(w, "base", nil)
+}
+
+func About(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+    t := loadPage("about")
+    t.ExecuteTemplate(w, "base", nil)
+}
 
 func main() {
     router := httprouter.New()
+
     router.GET("/", Index)
-    router.GET("/edit/:title", Edit)
-    router.POST("/save/:title", Save)
-    router.GET("/blurb/:title", GetBlurb)
-    router.GET("/page/:page_name", Page)
+    router.GET("/about", About)
+    router.GET("/header", Header)
+    router.GET("/blurb/:key/edit", BlurbEdit)
+    router.POST("/blurb/:key/save", BlurbSave)
+    router.GET("/blurb/:key", BlurbGet)
 
     log.Fatal(http.ListenAndServe(":8080", router))
 }
