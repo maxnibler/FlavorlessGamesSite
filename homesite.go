@@ -42,6 +42,10 @@ func (a *Account) User() *User {
     return nil
 }
 
+func addAccount(acc *Account) {
+    accounts = append(accounts, acc)
+}
+
 func (a *Account) toMap() map[string]string {
     var aMap map[string]string
     aMap["Email"] = a.Email
@@ -59,6 +63,10 @@ type User struct {
     Email string
     Name string
     Admin bool
+}
+
+func addUser(user *User) {
+    users = append(users, user)
 }
 
 func (u *User) toMap() map[string]string {
@@ -148,7 +156,7 @@ func LoginPost(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
         return
     }
     if !acc.validatePassword(r.PostFormValue("password")) {
-        m := &Message{Text:fmt.Sprintf("Password entered does not match the account: '%s", r.PostFormValue("email")),Error:true}
+        m := &Message{Text:fmt.Sprintf("Password entered does not match the account: %s", r.PostFormValue("email")),Error:true}
         sendMessage(w, m, http.StatusUnauthorized)
         return
     }
@@ -159,13 +167,27 @@ func LoginPost(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 }
 
 func SignupPost(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-    t := loadBlock("signup")
+    // t := loadBlock("signup")
     acc := getAccount(r.PostFormValue("email"))
     if acc != nil {
-        // w.Header().Set("HX-Redirect", "/")
-        t.Execute(w, fmt.Sprintf("No Account for the email: '%s' could be found", r.PostFormValue("email")))
+        m := &Message{Text:fmt.Sprintf("Account for the email: '%s' already exists", r.PostFormValue("email")),Error:true}
+        sendMessage(w, m, http.StatusConflict)
         return
     }
+    if r.PostFormValue("password") != r.PostFormValue("password-verify") {
+        m := &Message{Text:"Passwords do not match",Error:true}
+        sendMessage(w, m, http.StatusNotAcceptable)
+        return
+    }
+
+    user := &User{Name:r.PostFormValue("username"), Email:r.PostFormValue("email"), Admin:false}
+    i := len(users)
+    addUser(user)
+    acc = &Account{Email:r.PostFormValue("email"), password:[]byte(r.PostFormValue("password")), user:i}
+    addAccount(acc)
+    sessionUserSet(w, r, user)
+    w.Header().Set("HX-Redirect", "/users/profile")
+    w.WriteHeader(http.StatusOK)
 }
 
 func SignupForm(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -237,9 +259,16 @@ func BlurbSave(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
         return
     }
     b.Body = []byte(r.PostFormValue("body"))
-    b.save()
+    user, _ := sessionUser(w, r)
+    status := http.StatusOK
+    if user.Admin {
+        b.save()
+    } else {
+        status = http.StatusUnauthorized
+    }
     t := loadBlock("blurb")
-    t.Execute(w, b)
+    w.WriteHeader(status)
+    t.Execute(w, BlurbUser{Blurb:b, User:user})
 }
 
 func BlurbGet(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
