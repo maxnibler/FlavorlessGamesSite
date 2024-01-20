@@ -1,15 +1,19 @@
 <div id="blurb-box">
     <div class="flex">
         <div class="grow">
-            <b1 class="text-lg font-bold dark:text-indigo-200 text-slate-900">{{.Title}}</b1>
+            <b1 class="text-lg font-bold dark:text-indigo-200 text-slate-900">{{.Blurb.Title}}</b1>
         </div>
         <div class="basis-auto">
+            {{if .User}}
+            {{if .User.Admin}}
             <button class="bg-gray-50 rounded-md border border-black px-2"
-                hx-get="/blurb/{{.Title}}/edit/"
+                hx-get="/blurb/{{.Blurb.Title}}/edit/"
                 hx-trigger="click"
                 hx-target="#blurb-box"
             >edit</button>
+            {{end}}
+            {{end}}
         </div>
     </div>
-    <p class="dark:text-slate-50 text-slate-900">{{printf "%s" .Body}}</p>
+    <p class="dark:text-slate-50 text-slate-900">{{printf "%s" .Blurb.Body}}</p>
 </div>

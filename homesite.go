@@ -77,6 +77,11 @@ type Blurb struct {
     Body []byte
 }
 
+type BlurbUser struct {
+    Blurb *Blurb
+    User *User
+}
+
 func (b *Blurb) save() error {
     path := "Data/Blurbs/" + b.Title + ".txt"
     return os.WriteFile(path, b.Body, 0600)
@@ -107,7 +112,6 @@ func sessionUserSet(w http.ResponseWriter, r *http.Request, user *User) {
 	if err != nil {
         log.Fatal(err)
 	}
-    log.Printf("%s", session.Values["user"])
 }
 
 func LoginPost(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -213,8 +217,9 @@ func BlurbGet(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
     if err != nil {
         b = &Blurb{Title: key}
     }
+    user, _ := sessionUser(w, r)
     t := loadBlock("blurb")
-    t.Execute(w, b)
+    t.Execute(w, BlurbUser{Blurb:b, User:user})
 }
 
 func BlurbEdit(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -246,9 +251,6 @@ func Header(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
     user, err := sessionUser(w, r)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
-    }
-    if user != nil {
-        log.Printf(user.Email)
     }
     t := loadBlock("header")
     t.Execute(w, user)
@@ -295,7 +297,6 @@ func profilePage(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
         http.Redirect(w, r, "/users/login/", http.StatusNotFound)
         return
     }
-    log.Printf("user")
     t := loadPage("profile")
     t.ExecuteTemplate(w, "base", user)
 }
