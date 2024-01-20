@@ -9,7 +9,7 @@ import (
     "encoding/gob"
     "strconv"
     "bytes"
-    // "fmt"
+    "fmt"
 
     "github.com/gorilla/sessions"
     "github.com/julienschmidt/httprouter"
@@ -77,14 +77,38 @@ type Blurb struct {
     Body []byte
 }
 
-type BlurbUser struct {
-    Blurb *Blurb
-    User *User
+type Message struct {
+    Text string
+    Warning bool
+    Error bool
+    Success bool
 }
 
 func (b *Blurb) save() error {
     path := "Data/Blurbs/" + b.Title + ".txt"
     return os.WriteFile(path, b.Body, 0600)
+}
+
+type BlurbUser struct {
+    Blurb *Blurb
+    User *User
+}
+
+// Utils
+
+func loadJSON(path string) ([]map[string]string, error) {
+    file, err := os.Open(path)
+    if err != nil {
+        log.Fatal(err)
+        return nil, err
+    }
+    defer file.Close()
+    var data []map[string]string
+    if err := json.NewDecoder(file).Decode(&data); err != nil {
+        log.Fatal(err)
+        return nil, err
+    }
+    return data, nil
 }
 
 // Users
@@ -114,22 +138,44 @@ func sessionUserSet(w http.ResponseWriter, r *http.Request, user *User) {
 	}
 }
 
+
 func LoginPost(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    // t := loadBlock("login")
     acc := getAccount(r.PostFormValue("email"))
     if acc == nil {
-        // w.Header().Set("HX-Redirect", "/")
-        w.WriteHeader(http.StatusNotFound)
+        m := &Message{Text:fmt.Sprintf("No Account for the email: '%s' could be found", r.PostFormValue("email")),Error:true}
+        sendMessage(w, m, http.StatusNotFound)
         return
     }
     if !acc.validatePassword(r.PostFormValue("password")) {
-        // w.Header().Set("HX-Redirect", "/")
-        w.WriteHeader(http.StatusUnauthorized)
+        m := &Message{Text:fmt.Sprintf("Password entered does not match the account: '%s", r.PostFormValue("email")),Error:true}
+        sendMessage(w, m, http.StatusUnauthorized)
         return
     }
     user := acc.User()
     sessionUserSet(w, r, user)
-    w.Header().Set("HX-Redirect", "/")
+    w.Header().Set("HX-Redirect", "/users/profile")
     w.WriteHeader(http.StatusOK)
+}
+
+func SignupPost(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    t := loadBlock("signup")
+    acc := getAccount(r.PostFormValue("email"))
+    if acc != nil {
+        // w.Header().Set("HX-Redirect", "/")
+        t.Execute(w, fmt.Sprintf("No Account for the email: '%s' could be found", r.PostFormValue("email")))
+        return
+    }
+}
+
+func SignupForm(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    t := loadBlock("signup")
+    t.Execute(w, nil)
+}
+
+func LoginForm(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    t := loadBlock("login")
+    t.Execute(w, nil)
 }
 
 func getAccount(email string) *Account {
@@ -139,21 +185,6 @@ func getAccount(email string) *Account {
         }
     }
     return nil
-}
-
-func loadJSON(path string) ([]map[string]string, error) {
-    file, err := os.Open(path)
-    if err != nil {
-        log.Fatal(err)
-        return nil, err
-    }
-    defer file.Close()
-    var data []map[string]string
-    if err := json.NewDecoder(file).Decode(&data); err != nil {
-        log.Fatal(err)
-        return nil, err
-    }
-    return data, nil
 }
 
 func loadAccounts() {
@@ -256,6 +287,12 @@ func Header(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
     t.Execute(w, user)
 }
 
+func sendMessage(w http.ResponseWriter, message *Message, status int) {
+    t := loadBlock("message")
+    w.WriteHeader(status)
+    t.Execute(w, message)
+}
+
 // Pages
 
 func pagePath(name string) string {
@@ -326,10 +363,14 @@ func main() {
     router.GET("/header", Header)
     router.GET("/users/login", LoginPage)
     router.POST("/users/login", LoginPost)
+    router.GET("/users/login/form", LoginForm)
+    router.POST("/users/signup", SignupPost)
+    router.GET("/users/signup/form", SignupForm)
     router.GET("/users/profile", profilePage)
     router.GET("/blurb/:key/edit", BlurbEdit)
     router.POST("/blurb/:key/save", BlurbSave)
     router.GET("/blurb/:key", BlurbGet)
+    // router.GET("/message/:key", MessageGet)
 
     router.ServeFiles("/static/*filepath", http.Dir("static"))
 

@@ -1,0 +1,19 @@
+<div id="signup-window" class="flex grow justify-center items-center">
+    <form 
+        class="shrink"
+        hx-target="#signup-window" hx-post="/users/signup/" hx-swap="outerHTML"
+    >
+        <div class="flex flex-col">
+            <p>Username</p>
+            <input type="text" name="username" class="rounded">
+            <p>Email</p>
+            <input type="text" name="email" class="rounded">
+            <p>Password</p>
+            <input type="text" name="password" class="rounded">
+            <p>Verify Password</p>
+            <input type="text" name="password-verify" class="rounded">
+            <input class="text-slate-50 bg-indigo-500 rounded-md px-2 my-2" type="submit" value="Signup">
+        </div>
+    </form>
+    <div id="signup-message"></div>
+</div>

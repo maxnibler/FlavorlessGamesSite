@@ -5,19 +5,17 @@
 {{define "body"}}
 <div class="container mx-auto h-full flex items-center">
     <div class="flex h-1/2 grow">
-        <div class="flex basis-1/2 justify-center items-center dark:bg-slate-400 rounded-md mx-2 h-full">
-            <form class="shrink" hx-post="/users/login/">
-                <p>Email</p>
-                <input type="text" name="email">
-                <p>Password</p>
-                <input type="text" name="password">
-                <input class="text-slate-50 bg-indigo-500 rounded-md px-2" type="submit" value="Save">
-            </form>
+        <div class="flex flex-col basis-1/2 items-center dark:bg-slate-400 rounded-md mx-2 h-full">
+            <div class="shrink text-xl text-slate-900 my-3">
+                Login
+            </div>
+            <div hx-get="/users/login/form" hx-trigger="load" hx-swap="outerHTML"></div>
         </div>
-        <div class="flex basis-1/2 justify-center dark:bg-slate-400 rounded-md mx-2 h-full">
-            <div class="shrink">
+        <div class="flex flex-col basis-1/2 items-center dark:bg-slate-400 rounded-md mx-2 h-full">
+            <div class="shrink text-xl text-slate-900 my-3">
                 Signup
             </div>
+            <div hx-get="/users/signup/form" hx-trigger="load" hx-swap="outerHTML"></div>
         </div>
     </div>
 </div>

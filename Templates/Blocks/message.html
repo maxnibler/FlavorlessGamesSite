@@ -1,0 +1,11 @@
+<div>
+    {{if .Error}}
+    <p class="text-rose-700 text-center">{{.Text}}</p>
+    {{end}}
+    {{if .Warning}}
+    <p class="text-rose-300 text-center">{{.Text}}</p>
+    {{end}}
+    {{if .Success}}
+    <p class="text-emerald-700 text-center">{{.Text}}</p>
+    {{end}}
+</div>

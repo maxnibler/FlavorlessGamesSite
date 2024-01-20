@@ -3,9 +3,10 @@
 <html>
     <header>
         <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+        <script src="https://unpkg.com/htmx.org/dist/ext/response-targets.js"></script>
         <link rel="stylesheet" href="/static/output.css"> 
     </header>
-    <div class="bg-gray-100 dark:bg-slate-700 h-screen flex flex-col">
+    <div class="bg-gray-100 dark:bg-slate-700 h-screen flex flex-col" hx-ext="response-targets">
         <div class="basis-auto">
             <div hx-get="/header" hx-trigger="load" hx-swap="outerHTML"></div>
         </div>
