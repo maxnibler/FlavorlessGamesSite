@@ -1,0 +1,23 @@
+{{define "head"}}
+
+{{end}}
+
+{{define "body"}}
+<div class="container mx-auto h-full flex flex-col">
+    <div class="flex-auto">
+        <h1 class="text-7xl">Profile</h1>
+    </div>
+    <div class="flex items-center grow">
+        <div class="flex h-1/2 grow">
+            <div class="flex-col grow justify-center items-center dark:bg-slate-400 rounded-md mx-2 h-full">
+                <div>{{.Name}}</div>
+                <div>{{.Email}}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "foot"}}
+
+{{end}}
