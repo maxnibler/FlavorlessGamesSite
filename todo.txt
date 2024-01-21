@@ -1,0 +1,6 @@
+password hashing
+image serving
+dynamic Blurbs
+real db
+Projects page
+Social media footer

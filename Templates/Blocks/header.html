@@ -1,23 +1,33 @@
 <div class="flex flex-row mb-4 py-4">
-    <div class="basis-auto mx-3">
+    <div class="basis-auto mx-3" hx-get="/" hx-replace-url="true" hx-target="#root" hx-swap="outerHTML">
         <h1 class="relative bg-indigo-200 px-2 rounded">Flavorless Games</h1>
     </div>
     <div class="grow flex">
-        <div class="flex-none mx-2 bg-indigo-100 px-2 rounded">
-            <a href="/">home</a>
+        <!-- <div class="flex-none mx-2 bg-indigo-100 px-2 rounded">
+            <a>home</a>
+        </div> -->
+        <div 
+            class="flex-none mx-2 bg-indigo-100 px-2 rounded"
+            hx-get="/about" hx-replace-url="true" hx-target="#root" hx-swap="outerHTML"
+        >
+            About
         </div>
-        <div class="flex-none mx-2 bg-indigo-100 px-2 rounded">
-            <a href="/about">about</a>
+        <div 
+            class="flex-none mx-2 bg-indigo-100 px-2 rounded"
+            hx-get="/team" hx-replace-url="true" hx-target="#root" hx-swap="outerHTML"
+        >
+            The Team
         </div>
     </div>
     <div class="shrink flex">
         <a 
             {{if .}}
-            href="/users/profile"
+            hx-get="/users/profile"
             {{else}}
-            href="/users/login"
+            hx-get="/users/login"
             {{end}}
             class="flex-none mx-2 bg-indigo-100 px-2 rounded"
+            hx-replace-url="true" hx-target="#root" hx-swap="outerHTML"
         >
             {{if .}}
             {{.Email}}

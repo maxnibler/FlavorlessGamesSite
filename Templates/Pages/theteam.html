@@ -1,0 +1,22 @@
+{{define "head"}}
+
+{{end}}
+
+{{define "body"}}
+<div class="container mx-auto h-full flex flex-col">
+    <div class="my-4 basis">
+        <h1 class="text-3xl text-indigo-300">The Team</h1>
+    </div>
+    <div class="flex flex-col grow">
+        {{range $tm := .}}
+        <div hx-get="/team/{{$tm.Key}}" hx-trigger="load" hx-swap="outerHTML">
+            Loading
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}
+
+{{define "foot"}}
+
+{{end}}

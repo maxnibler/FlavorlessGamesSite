@@ -102,6 +102,13 @@ type BlurbUser struct {
     User *User
 }
 
+type TeamMember struct {
+    Name string
+    Title string
+    ShortDesc string
+    Key int
+}
+
 // Utils
 
 func loadJSON(path string) ([]map[string]string, error) {
@@ -117,6 +124,36 @@ func loadJSON(path string) ([]map[string]string, error) {
         return nil, err
     }
     return data, nil
+}
+
+// Team Members
+
+func loadTeamMembers() []*TeamMember {
+    var team []*TeamMember
+    data, err := loadJSON("Data/theteam.json")
+    if err != nil {
+        log.Fatal("Loading team members JSON failed")
+        return team
+    }
+    for i := range data {
+        memb := &TeamMember{Title: data[i]["Title"], Name: data[i]["Name"], ShortDesc: data[i]["ShortDesc"], Key:i}
+        team = append(team, memb)
+    }
+    return team
+}
+
+func MemberBlock(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    key := ps.ByName("key")
+    team := loadTeamMembers()
+    i, err := strconv.Atoi(key)
+    if err != nil || len(team) < i {
+        m := &Message{Text:fmt.Sprintf("Team Member does not exist for ID: %s", key), Error:true}
+        sendMessage(w, m, http.StatusNotFound)
+        return 
+    }
+    memb := team[i]
+    t := loadBlock("member")
+    t.Execute(w, memb)
 }
 
 // Users
@@ -354,6 +391,12 @@ func LoginPage(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
     t.ExecuteTemplate(w, "base", nil)
 }
 
+func TheTeam(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+    t := loadPage("theteam")
+    team := loadTeamMembers()
+    t.ExecuteTemplate(w, "base", team)
+}
+
 func profilePage(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
     user, err := sessionUser(w, r)
     if err != nil {
@@ -399,6 +442,8 @@ func main() {
     router.GET("/blurb/:key/edit", BlurbEdit)
     router.POST("/blurb/:key/save", BlurbSave)
     router.GET("/blurb/:key", BlurbGet)
+    router.GET("/team", TheTeam)
+    router.GET("/team/:key", MemberBlock)
     // router.GET("/message/:key", MessageGet)
 
     router.ServeFiles("/static/*filepath", http.Dir("static"))
