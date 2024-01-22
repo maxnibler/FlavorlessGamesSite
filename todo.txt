@@ -3,4 +3,7 @@ image serving
 dynamic Blurbs
 real db
 Projects page
+add tests
 Social media footer
+Email Verification
+Google OAuth
